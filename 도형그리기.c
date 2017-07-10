@@ -47,7 +47,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	HDC hdc;	//디바이스 콘텍스트의 핸들값 저장하는곳
 	PAINTSTRUCT ps;
 	POINT point[10] = { {10, 150}, {250, 30}, {500, 150}, {350, 300}, {150, 300} };
-	HPEN hpen;//펜의 핸들값 저장
+	HPEN hPen;	//펜의 핸들값 저장
+	HBRUSH hBrush;	//브러쉬의 핸들값 저장
 
 	switch (iMsg)
 	{
@@ -55,15 +56,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
-		hpen = CreatePen(PS_SOLID, 3, RGB(0, 255, 255));	//hepn = CreatePen(펜 유형, 펜 두께, 선 색);
-		hpen = (HPEN)SelectObject(hdc, hpen);
+		hPen = CreatePen(PS_SOLID, 3, RGB(0, 255, 255));	//hepn = CreatePen(펜 유형, 펜 두께, 선 색);
+		hPen = (HPEN)SelectObject(hdc, hPen);
+		hBrush = CreateSolidBrush(RGB(0, 255, 255));	//hBrush = CreateSolidBrush(RGB(빨강, 초록, 파랑));
+		hBrush = (HBRUSH)SelectObject(hdc, hBrush);
 		MoveToEx(hdc, 700, 0, NULL);		//MoveToEx(hdc, x좌표, y좌표, 거의 NULL);
 		LineTo(hdc, 700, 515);		//LineTo(hdc, x좌표, y좌표);
 		Ellipse(hdc, 850, 200, 950, 300);	//Ellipse(hdc, x1, y1, x2, y2);
 		Rectangle(hdc, 800, 400, 900, 500);		//Rectangle(hdc, x1, y1, x2, y2);
 		Polygon(hdc, point, 5);		//Polygon(hdc, point구조체, 다각형의 꼭짓점개수);
-		SelectObject(hdc, hpen);
-		DeleteObject(hpen);
+		SelectObject(hdc, hPen);	//오브젝트 선택
+		DeleteObject(hPen);		//삭제
+		SelectObject(hdc, hBrush);	//오브젝트 선택
+		DeleteObject(hBrush);		//삭제
 		EndPaint(hwnd, &ps);
 		break;
 	case WM_DESTROY:	//윈도우가 꺼졌을때
