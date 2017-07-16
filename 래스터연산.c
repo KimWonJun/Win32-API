@@ -60,8 +60,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
-		MoveToEx(hdc, startX, startY, NULL);
-		LineTo(hdc, oldX, oldY);
+		Ellipse(hdc, startX, startY, oldX, oldY);
 		EndPaint(hwnd, &ps);
 		break;
 
@@ -82,12 +81,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			hdc = GetDC(hwnd);
 			SetROP2(hdc, R2_XORPEN);
 			SelectObject(hdc, (HPEN)GetStockObject(WHITE_PEN));
+			SelectObject(hdc, (HBRUSH)GetStockObject(BLACK_BRUSH));
 			endX = LOWORD(lParam);
 			endY = HIWORD(lParam);
-			MoveToEx(hdc, startX, startY, NULL);
-			LineTo(hdc, oldX, oldY);
-			MoveToEx(hdc, startX, startY, NULL);
-			LineTo(hdc, endX, endY);
+			Ellipse(hdc, startX, startY, oldX, oldY);
+			Ellipse(hdc, startX, startY, endX, endY);
 			oldX = endX, oldY = endY;
 			ReleaseDC(hwnd, hdc);
 		}
