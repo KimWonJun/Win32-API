@@ -100,14 +100,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		cat_y += (int)(d_y / 7);
 
 		InvalidateRgn(hwnd, NULL, TRUE);
+
 		if ((-100 < (d_x * 7) && (d_x * 7) < 100) && (-100 < (d_y * 7) && (d_y * 7)<  100))
 		{
+			chk = FALSE;
 			KillTimer(hwnd, 1);
+			MessageBox(hwnd, _T("죽음.."), _T("사망"), MB_OK);
 			PostQuitMessage(0);
 		}
 		break;
 
 	case WM_DESTROY:	//윈도우가 꺼졌을때
+		KillTimer(hwnd, 1);
 		PostQuitMessage(0);	//GetMessage함수가 0을 반환하게함
 		break;
 	}
