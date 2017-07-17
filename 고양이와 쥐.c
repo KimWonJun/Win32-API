@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <tchar.h>
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
@@ -47,15 +48,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	PAINTSTRUCT ps;
 	static BOOL chk;
+	static int score;
 	static int cat_x, cat_y;
 	static int mouse_x, mouse_y;
 	static double d_x, d_y;
+	static TCHAR str[100];
 
 	switch (iMsg)
 	{
 	case WM_CREATE:	//À©µµ¿ì°¡ ¸¸µé¾îÁ³À»¶§
 		cat_x = 100, cat_y = 100;
 		mouse_x = 0, mouse_y = 0;
+		score = 0;
 		chk = FALSE;
 		break;
 
@@ -67,11 +71,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			SetTimer(hwnd, 1, 100, NULL);
 			TextOut(hdc, mouse_x, mouse_y, _T("Áã"), _tcslen(_T("Áã")));
 		}
+		wsprintf(str, _T("Á¡¼ö : %d"), score);
+		TextOut(hdc, 940, 0, str, _tcslen(str));
 		EndPaint(hwnd, &ps);
 		break;
 
 	case WM_LBUTTONDOWN:
 		chk = TRUE;
+		SetTimer(hwnd, 2, 100, NULL);
 		mouse_x = LOWORD(lParam);
 		mouse_y = HIWORD(lParam);
 		InvalidateRgn(hwnd, NULL, TRUE);
@@ -89,24 +96,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONUP:
 		chk = FALSE;
 		KillTimer(hwnd, 1);
+		KillTimer(hwnd, 2);
 		InvalidateRgn(hwnd, NULL, TRUE);
 		break;
 
 	case WM_TIMER:
-		d_x = mouse_x - cat_x;
-		d_y = mouse_y - cat_y;
-
-		cat_x += (int)(d_x / 7);
-		cat_y += (int)(d_y / 7);
-
-		InvalidateRgn(hwnd, NULL, TRUE);
-
-		if ((-100 < (d_x * 7) && (d_x * 7) < 100) && (-100 < (d_y * 7) && (d_y * 7)<  100))
+		switch (wParam)
 		{
-			chk = FALSE;
-			KillTimer(hwnd, 1);
-			MessageBox(hwnd, _T("Á×À½.."), _T("»ç¸Á"), MB_OK);
-			PostQuitMessage(0);
+		case 1:
+			d_x = mouse_x - cat_x;
+			d_y = mouse_y - cat_y;
+
+			cat_x += (int)(d_x / 7);
+			cat_y += (int)(d_y / 7);
+
+			InvalidateRgn(hwnd, NULL, TRUE);
+
+			if ((-100 < (d_x * 7) && (d_x * 7) < 100) && (-100 < (d_y * 7) && (d_y * 7) < 100))
+			{
+				chk = FALSE;
+				KillTimer(hwnd, 1);
+				MessageBox(hwnd, _T("Á×À½.."), _T("»ç¸Á"), MB_OK);
+				MessageBox(hwnd, str, _T("ÃÖÁ¾Á¡¼ö"),  MB_OK);
+				PostQuitMessage(0);
+			}
+			break;
+
+		case 2:
+			score++;
+			break;
 		}
 		break;
 
