@@ -49,6 +49,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	static BOOL chk;
 	static int cat_x, cat_y;
 	static int mouse_x, mouse_y;
+	static double d_x, d_y;
 
 	switch (iMsg)
 	{
@@ -57,22 +58,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		mouse_x = 0, mouse_y = 0;
 		chk = FALSE;
 		break;
+
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
-		TextOut(hdc, cat_x, cat_y, _T("고양이"), _tcslen(_T("고양이")));
+		TextOut(hdc, (int)cat_x, (int)cat_y, _T("고양이"), _tcslen(_T("고양이")));
 		if (chk)
 		{
-			SetTimer(hwnd, 1, 3000, NULL);
-			TextOut(hdc, mouse_x - 15, mouse_y - 15, _T("쥐"), _tcslen(_T("쥐")));
+			SetTimer(hwnd, 1, 100, NULL);
+			TextOut(hdc, mouse_x, mouse_y, _T("쥐"), _tcslen(_T("쥐")));
 		}
 		EndPaint(hwnd, &ps);
 		break;
+
 	case WM_LBUTTONDOWN:
 		chk = TRUE;
 		mouse_x = LOWORD(lParam);
 		mouse_y = HIWORD(lParam);
 		InvalidateRgn(hwnd, NULL, TRUE);
 		break;
+
 	case WM_MOUSEMOVE:
 		if (chk)
 		{
@@ -81,16 +85,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			InvalidateRgn(hwnd, NULL, TRUE);
 		}
 		break;
+
 	case WM_LBUTTONUP:
 		chk = FALSE;
 		KillTimer(hwnd, 1);
 		InvalidateRgn(hwnd, NULL, TRUE);
 		break;
+
 	case WM_TIMER:
-		//(mouse_x - cat_x);	 x의 차
-		//(mouse_y - cat_y);	 y의 차
+		d_x = mouse_x - cat_x;
+		d_y = mouse_y - cat_y;
+
+		cat_x += (int)(d_x / 7);
+		cat_y += (int)(d_y / 7);
+
 		InvalidateRgn(hwnd, NULL, TRUE);
+		if ((-100 < (d_x * 7) && (d_x * 7) < 100) && (-100 < (d_y * 7) && (d_y * 7)<  100))
+		{
+			KillTimer(hwnd, 1);
+			PostQuitMessage(0);
+		}
 		break;
+
 	case WM_DESTROY:	//윈도우가 꺼졌을때
 		PostQuitMessage(0);	//GetMessage함수가 0을 반환하게함
 		break;
