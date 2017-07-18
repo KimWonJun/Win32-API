@@ -49,9 +49,13 @@ void End_Game(HWND hwnd, int score)
 {
 	TCHAR str[100] = { 0, };
 	KillTimer(hwnd, 1);
-	MessageBox(hwnd, _T("사망.."), _T("종료"), MB_OK);
-	wsprintf(str, _T("최총점수 : %d"), score);
-	MessageBox(hwnd, str, _T("최종점수"), MB_OK);
+	if(score == 0)
+		MessageBox(hwnd, _T("사망.."), _T("종료"), MB_OK);
+	else
+	{
+		wsprintf(str, _T("최총점수 : %d"), score);
+		MessageBox(hwnd, str, _T("CLEAR!"), MB_OK);
+	}
 	PostQuitMessage(0);
 }
 
@@ -61,29 +65,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HFONT hFont, oldFont;
 	HPEN hPen, oldPen;
+
 	static RECT rectView;
 	static TCHAR str[100];
-	static int score;
+
 	static int coordinates[10][2] = { 0, };
 	static int items[10][2] = { 0, }; 
-	static int circle_cnt;
-	static int direction;
-	int i, x;
+
+	static int cnt_item;		//아이템 개수
+	static int score;			//점수
+	static int circle_cnt;	//원의 개수
+	static int direction;	//화살표 방향
+	int i, x;	//반복문과 x좌표 담을때 사용
 
 	switch (iMsg)
 	{
 	case WM_CREATE:	//윈도우가 만들어졌을때
-		GetClientRect(hwnd, &rectView);
-		score = 10000;
-		direction = VK_RIGHT;
+		GetClientRect(hwnd, &rectView);	//클라이언트 크기
+		cnt_item = 10;		//처음 아이템 개수
+		score = 10000;		//처음 점수
+		direction = VK_RIGHT;	//처음 시작 오른쪽으로
 
-		for (i = 0; i < 10; i++)
+		for (i = 0; i < 10; i++)	//아이템 랜덤배치
 		{
 			items[i][0] = (rand() % 36) * 20 + 30;
 			items[i][1] = (rand() % 20) * 20 + 30;
 		}
 
-		circle_cnt = 2;	//머리랑 몸
+		circle_cnt = 2;	//원의 처음 개수
 		x = 30;		//맨처음 x좌표
 		for (i = circle_cnt - 1; i >= 0; i--)
 		{
@@ -141,11 +150,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	case WM_TIMER:
 		if (score == 0)
 			End_Game(hwnd, score);
+		else if (cnt_item == 0)
+			End_Game(hwnd, score);
 		switch (direction)
 		{
 		case VK_UP:
 			if (coordinates[0][1] - 20 < rectView.top + 20)
-				End_Game(hwnd, score);
+				score = 0, End_Game(hwnd, score);
 
 			for (i = circle_cnt - 1; i > 0; i--)
 			{
@@ -157,7 +168,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 		case VK_DOWN:
 			if (coordinates[0][1] + 20 > rectView.bottom - 20)
-				End_Game(hwnd, score);
+				score = 0, End_Game(hwnd, score);
 
 			for (i = circle_cnt - 1; i > 0; i--)
 			{
@@ -169,7 +180,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 		case VK_LEFT:
 			if (coordinates[0][0] - 20 < rectView.left + 20)
-				End_Game(hwnd, score);
+				score = 0, End_Game(hwnd, score);
 
 			for (i = circle_cnt - 1; i > 0; i--)
 			{
@@ -181,7 +192,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 		case VK_RIGHT:
 			if (coordinates[0][0] + 20 > rectView.right - 20)
-				End_Game(hwnd, score);
+				score = 0, End_Game(hwnd, score);
 
 			for (i = circle_cnt - 1; i > 0; i--)
 			{
@@ -195,12 +206,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		{
 			if (coordinates[0][0] == items[i][0] && coordinates[0][1] == items[i][1])
 			{
-				circle_cnt++;
-				items[i][0] = 0, items[i][1] = 0;
-				score += 100;
+				circle_cnt++;		//원 개수 늘리기
+				cnt_item--;	//아이템 개수 줄이기
+				items[i][0] = 0, items[i][1] = 0;		//아이템 초기화
+				score += 100;	//스코어 추가
 			}
 		}
-		score -= 50;
+		score -= 50;		//0.1초마다 50점씩 깎임
 		InvalidateRgn(hwnd, NULL, TRUE);
 		break;
 
