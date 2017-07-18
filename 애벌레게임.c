@@ -74,13 +74,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:	//윈도우가 만들어졌을때
 		GetClientRect(hwnd, &rectView);
-		score = 0;
+		score = 10000;
 		direction = VK_RIGHT;
 
 		for (i = 0; i < 10; i++)
 		{
-			items[i][1] = (rand() % 760) + 20;
-			items[i][2] = (rand() % 420) + 20;
+			items[i][0] = (rand() % 36) * 20 + 30;
+			items[i][1] = (rand() % 20) * 20 + 30;
 		}
 
 		circle_cnt = 2;	//머리랑 몸
@@ -105,8 +105,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		for (i = 2; i < 25; i++)
 			Rectangle(hdc, 764, (i - 1) * 20, 784, i * 20);	//벽그리기
 
+		for (i = 0; i < 10; i++)
+			Ellipse(hdc, items[i][0] - 10, items[i][1] - 10, items[i][0] + 10, items[i][1] + 10);
+
 		hPen = (HPEN)CreatePen(PS_SOLID, 1, RGB(0, 0, 255));	//원그리기, 파란색
-		oldPen = SelectObject(hdc, hPen);
+		oldPen =	SelectObject(hdc, hPen);
 
 		for (i = 1; i < circle_cnt; i++)
 			Ellipse(hdc, coordinates[i][0] - 10, coordinates[i][1] - 10, coordinates[i][0] + 10, coordinates[i][1] + 10);		//나머지
@@ -136,6 +139,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_TIMER:
+		if (score == 0)
+			End_Game(hwnd, score);
 		switch (direction)
 		{
 		case VK_UP:
@@ -186,7 +191,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			coordinates[0][0] += 20;
 			break;
 		}
-		score++;
+		for (i = 0; i < 10; i++)
+		{
+			if (coordinates[0][0] == items[i][0] && coordinates[0][1] == items[i][1])
+			{
+				circle_cnt++;
+				items[i][0] = 0, items[i][1] = 0;
+				score += 100;
+			}
+		}
+		score -= 50;
 		InvalidateRgn(hwnd, NULL, TRUE);
 		break;
 
