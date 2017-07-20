@@ -116,6 +116,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 		oldBit = (HBITMAP)SelectObject(memdc, hBit);
 
+		Rectangle(memdc, 0, 0, 800, 500);
+
 		for (i = 1; i <= 40; i++)
 			Rectangle(memdc, (i - 1) * 20, 0, i * 20, 20);
 		for (i = 2; i <= 39; i++)
@@ -176,7 +178,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		score -= 50;		//0.1초마다 50점씩 깎임
-		InvalidateRgn(hwnd, NULL, FALSE);
+		InvalidateRgn(hwnd, NULL, TRUE);
 
 		if (score == 0)
 			End_Game(hwnd, score);
