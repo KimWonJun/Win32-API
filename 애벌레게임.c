@@ -5,7 +5,7 @@
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
 void End_Game(HWND hwnd, int score, int* status);
-void Start_Setting(HWND, int*, int*, int*, int*, int*, int*, int*, int*, int*, int*);
+void Start_Setting(HWND, int(*)[2], int(*)[2], int*, int*, int*, int*, int*, int*, int*);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
@@ -47,46 +47,46 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	return (int)msg.wParam;
 }
 
-#define SEC 1000
+#define SEC 1000				//1초
 
-#define LOGO 0
-#define SETTING 1
-#define COUNTDOWN 2
-#define GAME 3
-#define GAMEOVER 4
+#define LOGO 0				//로고
+#define SETTING 1			//설정
+#define COUNTDOWN 2	//카운트다운
+#define GAME 3				//게임
+#define GAMEOVER 4		//게임오버
 
-#define REGAME 0
-#define EXIT 1
+#define REGAME 0			//다시시작(게임오버메뉴)
+#define EXIT 1					//나가기(게임오버메뉴)
 
-#define LOGO_TIMER 1
-#define COUNTDOWN_TIMER 2
-#define GAME_TIMER 3
+#define LOGO_TIMER 1					//로고의 애벌레 움직이느 타이머
+#define COUNTDOWN_TIMER 2	//카운트다운 타이머
+#define GAME_TIMER 3				//게임에서 애벌레 타이머
 
-#define EASY 80
-#define MEDIUM 60
-#define DIFFICULT 40
+#define EASY 80				//쉬움(속도)
+#define MEDIUM 60			//보통(속도)
+#define DIFFICULT 40		//어려움(속도)
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
-	HDC hdc, memdc;
-	PAINTSTRUCT ps;
-	HFONT hFont, oldFont;
-	HBRUSH hBrush, oldBrush;
-	HBITMAP hBit, oldBit;
+	HDC hdc, memdc;					//디바이스콘텍스트, 메모리디바이스콘텍스트
+	PAINTSTRUCT ps;					//텍스트
+	HFONT hFont, oldFont;			//폰트
+	HBRUSH hBrush, oldBrush;	//브러쉬
+	HBITMAP hBit, oldBit;			//사진
 
-	static RECT rectView;
+	static RECT rectView;		//클라이언트 크기
 	static TCHAR buffer[100];
 
-	static int coordinates[12][2] = { 0, };
-	static int items[10][2] = { 0, };
+	static int coordinates[12][2] = { 0, };			//좌표
+	static int items[10][2] = { 0, };					//아이템좌표
 
 	static int status;		//게임 상태
-	static int difficulty;		//난이도
+	static int difficulty;		//난이도(속도)
 	static int minus;			//감소폭
-	static int cnt_time;		//카운트다운시 3초 보관용
+	static int cnt_time = 3;		//카운트다운시 3초 보관용
 	static int cnt_item;		//아이템 개수
-	static int score;			//점수
 	static int cnt_circle;	//원의 개수
+	static int score;			//점수
 	static int direction;	//화살표 방향
 	static int menu;		//게임 오버시 메뉴
 
@@ -99,15 +99,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:	//윈도우가 만들어졌을때
 	{
 		GetClientRect(hwnd, &rectView);	//클라이언트 크기
-		Start_Setting(hwnd, &status, &difficulty, &menu, &cnt_time, &cnt_item, &score, &direction, items, &cnt_circle, coordinates);
+		Start_Setting(hwnd, coordinates, items, &status, &difficulty, &menu, &direction, &score, &cnt_circle, &cnt_item);
 		break;	//iMsg의 break
 	}
 
+	/*
+	******************
+	그리기 시작
+	******************
+	*/
 	case WM_PAINT:
 	{
 		hdc = BeginPaint(hwnd, &ps);
+		
+		/*상태에 따라*/
 		switch (status)
 		{
+		/*로고그리기*/
 		case LOGO:
 			hBrush = CreateSolidBrush(RGB(0, 180, 0));		//연두색
 			oldBrush = SelectObject(hdc, hBrush);
@@ -137,6 +145,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			DeleteObject(hFont);
 			break;	//status의 break
 
+		/*세팅에서 그리기*/
 		case SETTING:
 		{
 			hFont = CreateFont(40, 0, 0, 0, 0, 0, 0, 0, HANGEUL_CHARSET, 0, 0, 0, 0, _T("나눔바른고딕"));
@@ -151,6 +160,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			TextOut(hdc, 360, 230, _T("보통"), _tcslen(_T("보통")));
 			TextOut(hdc, 350, 260, _T("어려움"), _tcslen(_T("어려움")));
 
+			/*화살표 그리기*/
 			switch (difficulty)
 			{
 			case EASY:
@@ -169,6 +179,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			break;	//status의 break
 		}
 
+		/*카운트 다운 그리기*/
 		case COUNTDOWN:
 			hFont = CreateFont(40, 0, 0, 0, 0, 0, 0, 0, HANGEUL_CHARSET, 0, 0, 0, 0, _T("나눔바른고딕"));		//카운트다운
 			oldFont = (HFONT)SelectObject(hdc, hFont);
@@ -179,7 +190,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			SelectObject(hdc, oldFont);
 			DeleteObject(hFont);	//카운트다운
 			break;
-
+	
+		/*게임에서 그리기 (애벌레 깜빡거림)*/
 		case GAME:
 		{
 			memdc = CreateCompatibleDC(hdc);
@@ -231,15 +243,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			break;	//status의 break
 		}
 
+		/*게임오버 메뉴 선택창*/
 		case GAMEOVER:
 			hFont = CreateFont(30, 0, 0, 0, 0, 0, 0, 0, HANGEUL_CHARSET, 0, 0, 0, 0, _T("나눔바른고딕"));
 			oldFont = SelectObject(hdc, hFont);
 
-			TextOut(hdc, 310, 100, _T("GAME OVER"), _tcslen(_T("GAME OVER")));
-			wsprintf(buffer, _T("최종점수 : %d"), score);
-			TextOut(hdc, 320, 200, buffer, _tcslen(buffer));
+			if (score == 0)
+			{
+				TextOut(hdc, 310, 100, _T("GAME OVER"), _tcslen(_T("GAME OVER")));
+				wsprintf(buffer, _T("최종점수 : %d"), score);
+				TextOut(hdc, 320, 200, buffer, _tcslen(buffer));
+			}
+			else
+			{
+				wsprintf(buffer, _T("최종점수 : %d"), score);
+				TextOut(hdc, 310, 200, buffer, _tcslen(buffer));
+			}
+
 			TextOut(hdc, 340, 300, _T("다시하기"), _tcslen(_T("다시하기")));
 			TextOut(hdc, 360, 340, _T("종료"), _tcslen(_T("종료")));
+
+			/*화살표 그리기*/
 			switch (menu)
 			{
 			case REGAME:
@@ -257,21 +281,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		EndPaint(hwnd, &ps);
 		break;	//iMsg의 break
 	}
+	/*
+	******************
+	그리기 끝
+	******************
+	*/
+
+	/*
+	******************
+	입력받기 시작
+	******************
+	*/
 
 	case WM_KEYDOWN:
 	{
-		if (wParam == VK_ESCAPE)
+		if (wParam == VK_ESCAPE)	//ESC키일경우 탈출
 			DestroyWindow(hwnd);
+
+		/*상태에 따라*/
 		switch (status)
 		{
+		/*로고일때 입력이 있으면*/
 		case LOGO:
-			KillTimer(hwnd, LOGO_TIMER);
-			status = SETTING;
-			InvalidateRgn(hwnd, NULL, TRUE);
+			KillTimer(hwnd, LOGO_TIMER);		//로고의 애벌레 타이머 삭제
+			status = SETTING;							//상태 변경
+			InvalidateRgn(hwnd, NULL, TRUE);	//다시그리기
 			break;	//status의 break
 
+		/*세팅일때 입력이 있으면*/
 		case SETTING:
-			if (wParam == VK_RETURN)
+			if (wParam == VK_RETURN)	//엔터면 설정 적용
 			{
 				cnt_circle = 2;	//원의 처음 개수
 				x = 30;		//맨처음 x좌표
@@ -281,13 +320,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 					x += 20;
 				}	//원들의 좌표설정
 
-				status = COUNTDOWN;
+				status = COUNTDOWN;		//상태 변경
 
-				SetTimer(hwnd, COUNTDOWN_TIMER, SEC, NULL);
+				SetTimer(hwnd, COUNTDOWN_TIMER, SEC, NULL);		//카운트타이머 설정
 			}
-			else if (wParam == VK_UP && difficulty != EASY)
+			else if (wParam == VK_UP && difficulty != EASY)		//위키이면서 EASY가 아니면
 				difficulty += 20;
-			else if (wParam == VK_DOWN && difficulty != DIFFICULT)
+			else if (wParam == VK_DOWN && difficulty != DIFFICULT)		//아래키이면서 DIFFICULT가 아니면
 				difficulty -= 20;
 
 			InvalidateRgn(hwnd, NULL, TRUE);
@@ -297,13 +336,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			if (status == GAME && wParam == VK_LEFT || wParam == VK_RIGHT || wParam == VK_UP || wParam == VK_DOWN)
 				direction = wParam;
 			break;	//status의 break
+
 		case GAMEOVER:
 			if (wParam == VK_RETURN)
 			{
 				switch (menu)
 				{
 				case REGAME:
-					Start_Setting(hwnd, &status, &difficulty, &menu, &cnt_time, &cnt_item, &score, &direction, items, &cnt_circle, coordinates);
+					Start_Setting(hwnd, coordinates, items, &status, &difficulty, &menu, &direction, &score, &cnt_circle, &cnt_item);
 					InvalidateRgn(hwnd, NULL, TRUE);
 					break;
 				case EXIT:
@@ -311,10 +351,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 					break;
 				}
 			}
+			else if (wParam == VK_UP && menu == EXIT)
+				menu = REGAME;
+			else if (wParam == VK_DOWN && menu == REGAME)
+				menu = EXIT;
+			InvalidateRgn(hwnd, NULL, TRUE);
 			break;	//status의 break
 		}
 		break;	//iMsg의 break
 	}
+
+	/*
+	******************
+	타이머
+	******************
+	*/
 
 	case WM_TIMER:
 	{
@@ -465,33 +516,37 @@ void End_Game(HWND hwnd, int score, int* status)
 	InvalidateRgn(hwnd, NULL, TRUE);
 }
 
-void Start_Setting(HWND hwnd, int* status, int* difficulty, int* menu, int* cnt_time, int* cnt_item, int* score, int* direction, int* items, int* cnt_circle, int* coordinates)
+/*
+*************************
+시작할때 세팅
+*************************
+*/
+
+void Start_Setting(HWND hwnd, int (*coordinates)[2], int (*items)[2], int *status, int *difficulty, int *menu, int *direction, int *score, int *cnt_circle, int *cnt_item)
 {
 	int i, x;
 
-	status = LOGO;		//처음 상태
-	difficulty = EASY;	//처음 난이도
-	menu = REGAME;
+	*status = LOGO;			//상태는 로고
+	*difficulty = EASY;		//난이도는 쉬움
+	*menu = REGAME;		//메뉴는 다시시작
 
-	cnt_time = 3;
+	*score = 10000;
+	*direction = VK_RIGHT;
 
-	cnt_item = 10;		//처음 아이템 개수
-	score = 10000;		//처음 점수
-	direction = VK_RIGHT;	//처음 시작 오른쪽으로
+	*cnt_item = 10;
+	*cnt_circle = 12;
 
 	for (i = 0; i < 10; i++)	//아이템 랜덤배치
 	{
 		items[i][0] = (rand() % 36) * 20 + 30;
 		items[i][1] = (rand() % 20) * 20 + 30;
 	}
-
-	cnt_circle = 12;	//원의 처음 개수
-	x = -240;		//맨처음 x좌표
-	for (i = cnt_circle - 1; i >= 0; i--)
+	x = -240;
+	for (i = *cnt_circle - 1; i >= 0; i--)
 	{
 		coordinates[i][0] = x, coordinates[i][1] = 100;
 		x += 20;
-	}	//원들의 좌표설정
+	}
 
-	SetTimer(hwnd, LOGO_TIMER, 200, NULL);	//로고 애벌레
+	SetTimer(hwnd, LOGO_TIMER, 200, NULL);
 }
