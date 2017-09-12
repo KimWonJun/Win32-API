@@ -72,6 +72,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;					//텍스트
 	HFONT hFont, oldFont;			//폰트
 	HBRUSH hBrush, oldBrush;	//브러쉬
+	HPEN hPen, oldPen;				//펜
 	HBITMAP hBit, oldBit;			//사진
 
 	static RECT rectView;		//클라이언트 크기
@@ -117,18 +118,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		{
 		/*로고그리기*/
 		case LOGO:
-			hBrush = CreateSolidBrush(RGB(0, 180, 0));		//연두색
-			oldBrush = SelectObject(hdc, hBrush);
+			hPen = CreatePen(BS_SOLID, 1, RGB(255, 255, 255));
+			oldPen = SelectObject(hdc, hPen);
 
-			for (i = 1; i < cnt_circle; i++)
+			for (i = 0; i < cnt_circle; i++)
+			{
+				hBrush = CreateSolidBrush(RGB(0, 90 + (i * 15), 0));		//연두색
+				oldBrush = SelectObject(hdc, hBrush);
 				Ellipse(hdc, coordinates[i][0] - 10, coordinates[i][1] - 10, coordinates[i][0] + 10, coordinates[i][1] + 10);		//나머지
-
-			hBrush = (HBRUSH)CreateSolidBrush(RGB(0, 255, 0));	//초록색	
-			oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
-			Ellipse(hdc, coordinates[0][0] - 10, coordinates[0][1] - 10, coordinates[0][0] + 10, coordinates[0][1] + 10);	//머리
+			}
 
 			SelectObject(hdc, oldBrush);
 			DeleteObject(hBrush);
+			SelectObject(hdc, oldPen);
+			DeleteObject(hPen);
 
 			hFont = CreateFont(40, 0, 0, 0, 0, 0, 0, 0, HANGEUL_CHARSET, 0, 0, 0, 0, _T("나눔바른고딕"));
 			oldFont = SelectObject(hdc, hFont);
@@ -199,7 +202,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 			oldBit = (HBITMAP)SelectObject(memdc, hBit);
 
-			Rectangle(memdc, 0, 0, 800, 500);
+			Rectangle(memdc, 0, 0, 800, 500);	//바탕 하얀색으로
 
 			for (i = 1; i <= 40; i++)
 				Rectangle(memdc, (i - 1) * 20, 0, i * 20, 20);
@@ -213,19 +216,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			for (i = 0; i < 10; i++)		//아이템 출력
 				Ellipse(memdc, items[i][0] - 10, items[i][1] - 10, items[i][0] + 10, items[i][1] + 10);
 
-			hBrush = (HBRUSH)CreateSolidBrush(RGB(0, 180, 0));		//연두색
-			oldBrush = SelectObject(hdc, hBrush);
+			for (i = 0; i < cnt_circle; i++)
+			{
+				hBrush = CreateSolidBrush(RGB(0, 90 + (i * 15), 0));		//연두색
+				oldBrush = SelectObject(memdc, hBrush);
+				Ellipse(memdc, coordinates[i][0] - 10, coordinates[i][1] - 10, coordinates[i][0] + 10, coordinates[i][1] + 10);		//나머지
+			}
 
-			for (i = 1; i < cnt_circle; i++)
-				Ellipse(hdc, coordinates[i][0] - 10, coordinates[i][1] - 10, coordinates[i][0] + 10, coordinates[i][1] + 10);		//나머지
-
-			hBrush = (HBRUSH)CreateSolidBrush(RGB(0, 255, 0));	//초록색
-			oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
-
-			Ellipse(hdc, coordinates[0][0] - 10, coordinates[0][1] - 10, coordinates[0][0] + 10, coordinates[0][1] + 10);	//머리
-
-			SelectObject(hdc, oldBrush);
-			DeleteObject(hBrush);
+			SelectObject(memdc, oldBrush);
+			DeleteObject(hBrush);			//브러쉬 삭제
 
 			hFont = CreateFont(20, 0, 0, 0, 0, 0, 0, 0, HANGEUL_CHARSET, 0, 0, 0, 0, _T("나눔바른고딕"));		//점수 출력
 			oldFont = (HFONT)SelectObject(memdc, hFont);
@@ -234,7 +233,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			TextOut(memdc, 0, 0, buffer, _tcslen(buffer));
 
 			SelectObject(memdc, oldFont);
-			DeleteObject(hFont);	//점수 출력
+			DeleteObject(hFont);	//폰트 삭제
 
 			BitBlt(hdc, 0, 0, 800, 500, memdc, 0, 0, SRCCOPY);
 
@@ -419,12 +418,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 				}
 				cnt_time = 3;
 			}
-			break;
+			break;		//wParam의 break;
 
 		case GAME_TIMER:
 			for (i = 0; i < 10; i++)
 			{
-				if (coordinates[0][0] == items[i][0] && coordinates[0][1] == items[i][1])
+				if (coordinates[0][0] == items[i][0] && coordinates[0][1] == items[i][1])		//머리와 아이템이 만나면
 				{
 					cnt_circle++;		//원 개수 늘리기
 					cnt_item--;	//아이템 개수 줄이기
@@ -433,12 +432,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			score -= minus;		//각 난이도의 속도마다 minus만큼 깎임
-			InvalidateRgn(hwnd, NULL, FALSE);
+			InvalidateRgn(hwnd, NULL, FALSE);		//다시그리기
 
 			if (score == 0 || cnt_item == 0)	//스코어가 0이거나 아이템을 다 먹으면
 				End_Game(hwnd, score, &status);
 
-			switch (direction)
+			switch (direction)		//방향에 따라 움직임
 			{
 			case VK_UP:
 				if (coordinates[0][1] - 20 < rectView.top + 20)
